@@ -21,7 +21,7 @@ algorithms = {@DFQRM_B, @Nelder_Mead, @ZORO, @ZORO_FA};
 % ==== Parameters determining the run
 n = 500;
 s = 30; %true sparsity
-budget = 50; %NB: the number of fevals allowed is budget*(problem dim + 1)
+budget = 100; %NB: the number of fevals allowed is budget*(problem dim + 1)
 S = datasample(1:n,s,'Replace', false); % Sample s random indices in range 1:d
 fparam.s = s;
 fparam.S = S;
@@ -37,7 +37,7 @@ fparam.requires_params = false;
 fparam.f = @(x)temp_fun(x, fparam);
 
 % ==== Common params
-x0 = 10*randn(n,1);
+x0 = randn(n,1);
 fx0 = fparam.f(x0);
 num_iters = 1e6;
 

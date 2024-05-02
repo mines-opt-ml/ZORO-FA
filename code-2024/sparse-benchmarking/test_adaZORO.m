@@ -14,7 +14,7 @@ addpath(genpath('../../Zoro-FA-Matlab'))
 addpath(genpath('../../Benchmark-algorithms'))
 addpath(genpath('./problems/'))
 
-algorithms = {@ZORO_FA}; %{@DFQRM_B, @Nelder_Mead, @ZORO, @ZORO_FA, @adaZORO};
+algorithms = {@adaZORO}; %{@DFQRM_B, @Nelder_Mead, @ZORO, @ZORO_FA, @adaZORO};
 
 % ==== Parameters determining the run
 n = 500;

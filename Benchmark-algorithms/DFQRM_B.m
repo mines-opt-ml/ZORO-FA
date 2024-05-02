@@ -51,6 +51,8 @@ fun = fparam.f;
 [f]=fun(x);
 nf=1;
 H=[nf f];
+num_queries = [1];
+objval_seq = [f];
 sigma=1;
 sigma_min=10^(-2);
 u=[f];
@@ -102,14 +104,16 @@ while (nf<nfmax) && (fmin > 10^(-10))
   u=[u;f];
   sigma=max([sigma/2 sigma_min]);
   fmin = min(u);
-  disp(['best f value so far is ', num2str(fmin), ' and step size is ', num2str(1/sigma)])
+  objval_seq = [objval_seq; fmin];
+  num_queries = [num_queries; H(end,1)];
+  disp(['best f value so far is ', num2str(fmin), ' step size is ', num2str(1/sigma), ' num queries is ', num2str(H(end,1))])
 end
 %fmin=min(u);
 %plot(u);
 
 % Collate results
-Result.objval_seq = H(:,2); %toDo: Fix this so it retains only the best so far.
-Result.num_queries = H(:,1);
+Result.objval_seq = objval_seq;
+Result.num_queries = num_queries;
 Result.sol = x;
 disp(['Final loss is ', num2str(H(end,2)), ' and the number of queries is ', num2str(H(end,1))])
 end
