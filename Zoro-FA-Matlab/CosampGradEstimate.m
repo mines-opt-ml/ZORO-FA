@@ -1,4 +1,4 @@
-function [func_val,grad_estimate] = CosampGradEstimate(function_handle, fparam, cosamp_params)
+function [func_val,grad_estimate,err] = CosampGradEstimate(function_handle, fparam, cosamp_params)
 %        grad_estimate = CosampGradEstimate(num_samples,delta)2(function_handle,x,num_samples,delta)
 % Zeroth order gradient estimator using CoSaMP.
 % =============================== Inputs =============================== %
@@ -48,10 +48,11 @@ for i = 1:num_samples
     y(i) = (query_point - func_val)/(delta*sqrt(num_samples));
 end
 
-if num_samples < length(x)
+if num_samples < length(x) & sparsity < length(x)/2 - 1
     [grad_estimate, err] = cosamp(Z,y,sparsity,tol,n);
 else
     grad_estimate = Z\y;
+    err = 0;
     %disp(['Dimension is ', num2str(sizes(2)), ' and size of Z is ', num2str(num_samples)])
     %disp('Using least squares gradient estimator instead.')
 end

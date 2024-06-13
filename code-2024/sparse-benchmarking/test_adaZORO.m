@@ -41,8 +41,8 @@ num_iters = 1e6;
 
 % ==== Define the parameters for ZORO
 param.maxit = num_iters;
-param.delta = 0.001;
-param.step_size = 0.5;
+param.delta = 1e-4;
+param.step_size = 0.05;
 param.x0 = x0;
 param.budget = (n+1)*budget;
 param.n = n;

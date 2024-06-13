@@ -16,12 +16,12 @@ addpath(genpath('../../Zoro-FA-Matlab'))
 addpath(genpath('../../Benchmark-algorithms'))
 addpath(genpath('./problems/'))
 
-algorithms = {@DFQRM_B, @Nelder_Mead, @ZORO, @ZORO_FA};
+algorithms = {@DFQRM_B, @Nelder_Mead, @ZORO, @ZORO_FA, @adaZORO};
 
 % ==== Parameters determining the run
 n = 500;
 s = 30; %true sparsity
-budget = 100; %NB: the number of fevals allowed is budget*(problem dim + 1)
+budget = 200; %NB: the number of fevals allowed is budget*(problem dim + 1)
 S = datasample(1:n,s,'Replace', false); % Sample s random indices in range 1:d
 fparam.s = s;
 fparam.S = S;
@@ -30,14 +30,14 @@ B = rand(s);
 fparam.A = B'*B;
 fparam.noise_mag = 0; % no noise for now.
 fparam.fmin = 0; % true minimum value.
-temp_fun = @SparseQuadratic;
+%temp_fun = @SparseQuadratic;
 %temp_fun = @Max_s_squared;
-%temp_fun = @SparseSkewQuartic;
+temp_fun = @SparseSkewQuartic;
 fparam.requires_params = false;
 fparam.f = @(x)temp_fun(x, fparam);
 
 % ==== Common params
-x0 = randn(n,1);
+x0 = 10*randn(n,1);
 fx0 = fparam.f(x0);
 num_iters = 1e6;
 
@@ -60,13 +60,14 @@ labels{1} = 'DFQRM';
 labels{2} = 'Nelder-Mead';
 labels{3} = 'ZORO';
 labels{4} = 'ZORO-FA';
+labels{5} = 'adaZORO';
 
 hl = zeros(4,1);
 for j=1:length(algorithms)
     if j == 4
         param.sparsity = ceil(0.05*n);
         param.epsilon = 0.01;
-        param.sigma0 = 10;
+        param.sigma0 = 1;
         param.theta = 0.25;
     end
     temp_Results = feval(algorithms{j}, fparam, param);
@@ -79,6 +80,6 @@ for j=1:length(algorithms)
 end
 
 legend(labels)
-axis([0 105 0 1.1*fx0])
+axis([0 205 0 1.1*fx0])
 set(gca, 'FontSize', 18)
 set(gca, 'LineWidth', 1)

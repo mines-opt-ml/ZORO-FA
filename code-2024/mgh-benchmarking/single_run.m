@@ -7,7 +7,7 @@ addpath(genpath('../../Benchmark-algorithms'))
 addpath("problems/")
 
 problems = {'band', 'bl', 'bv', 'ie', 'lin', 'lin0', 'lin1', 'pen1', 'pen2', 'rosex', 'singx', 'trid', 'trig', 'vardim'};
-algorithms = {@DFQRM_B, @Nelder_Mead, @ZORO_FA};%, 'prima'};
+algorithms = {@DFQRM_B, @ZORO_FA}; % @Nelder_Mead, @ZORO, @ZORO_FA, @adaZORO};%, 'prima'};
 Results = cell(length(problems), length(algorithms));
 function_evaluations = cell(length(problems), length(algorithms));
 starting_value = zeros(length(problems),1);
@@ -19,21 +19,23 @@ maxit=1e5; %so large it will never be reached.
 budget=100; %NB: the number of fevals allowed is budget*(problem dim + 1)
 n = 500; % use same dimension for all problems
 s = 0; % use either 0 or 1 to toggle the initial point
-tolerance = 1e-2;
+%tolerance = 1e-1;
 
 for k=1:length(problems)
     fname = problems(k);
     function_builder; % script that creates param, fparam
     starting_value(k) = fx0;
-    % modify parameters if necessary
-    % additional parameters for ZORO-FA
+    % ==== additional parameters for ZORO-FA
     param.sparsity = ceil(0.05*n); % Let's be consistent with this initial sparsity choice
     param.epsilon = 0.01;
     param.sigma0 = 1.;
     param.theta = 0.25;
     N(k) = n;
-    % a parameter for CARS
-    %param.target_reduction_frac = 0.1;
+    % ==== additional parameters for ZORO
+    param.step_size = 0.005;
+    param.verbose = true;
+    param.delta = 0.05;
+
     for j=1:length(algorithms)
         if strcmp(algorithms{j}, 'prima')
             % reshape inputs for prima
@@ -51,6 +53,10 @@ for k=1:length(problems)
             temp_Results.algname = 'newuoa';
             temp_Results.objval_seq = output.fhist;
             temp_Results.num_queries = 1:length(output.fhist);
+        elseif j==3 || j == 5  % ZORO or adaZORO
+            %params.sparsity = ceil(0.1*n);
+            temp_Results = feval(algorithms{j}, fparam, param);
+            %params.sparsity = ceil(0.05*n); % set sparsity back to default value.
         else
             temp_Results = feval(algorithms{j}, fparam, param);
             % min_feval_achieved = min(temp_Results.objval_seq);
@@ -63,9 +69,15 @@ for k=1:length(problems)
     end
 end
 
-% Generate data profiles
-h1 = data_profile(Results,N,starting_value, tolerance);
-set(gca, 'FontSize',18)
+tolerances = [1e-1, 1e-2, 1e-3];
+for i=1:3
+    tolerance = tolerances(i)
+    % Generate data profiles
+    h1 = data_profile(Results,N,starting_value, tolerance);
+    set(gca, 'FontSize',18)
+    set(gca, 'LineWidth', 1)
+    figure
+end
 
 
 

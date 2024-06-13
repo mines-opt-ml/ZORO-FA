@@ -16,7 +16,7 @@ function [func_val,grad_estimate,sampling_data] = CosampGradEstimate_query_recyc
 %
 
 % === Initialization and unpack various parameters
-tol = 1e-8; % tolerance for CoSaMP. Do we still want this?
+tol = 1e-3; % tolerance for CoSaMP. Do we still want this?
 x = cosamp_params.x;
 Z_new = cosamp_params.Z_new;
 sparsity = cosamp_params.sparsity;
@@ -40,6 +40,7 @@ if requires_params
 else
     func_val = function_handle(x);
 end
+disp(['function value is ', num2str(func_val)])
 
 for i = 1:num_new_samples
     if requires_params
@@ -48,6 +49,7 @@ for i = 1:num_new_samples
         query_point = function_handle(x + delta*Z_new(i,:)');
     end
     y_new(i) = (query_point - func_val)/(delta);
+    disp(['query point is ', num2str(query_point)])
 end
 
 if isfield(cosamp_params, 'Z')
@@ -62,8 +64,9 @@ else
     y = y_new;
 end
 
+disp(['several entries of y ', num2str(y(7)), ' and ' num2str(y(50))])
 if sparsity < length(x)/2 -1 
-    disp(['sparsity is ', num2str(sparsity)])
+    %disp(['sparsity is ', num2str(sparsity)])
     [grad_estimate,err] = cosamp(Z/sqrt(num_samples),y/sqrt(num_samples),sparsity,tol,n);
 else
     grad_estimate = Z\y;

@@ -32,6 +32,7 @@ residual = u;
 t = 1; 
 numericalprecision = 1e-14;
 T = [];
+err = inf;
 
 while (t <= maxiterations) && (norm(residual)/norm(u) > tol)
   y = abs(Phi'*residual);
@@ -44,10 +45,9 @@ while (t <= maxiterations) && (norm(residual)/norm(u) > tol)
   try
     Kgoodindices = find(abs(b) >= vals(K) & abs(b) > numericalprecision);
   catch ME
-      T
-      % warning('all elements of y are below numerical precision')
-      rethrow(ME)
-      % Kgoodindices = 1:length(T);
+    warning('all elements of y are below numerical precision')
+    rethrow(ME)
+    %Kgoodindices = 1:length(T);
   end
   T = T(Kgoodindices);
   Sest = zeros(size(Phi,2),1);

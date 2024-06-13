@@ -157,5 +157,3 @@ Result.sparse_seq = sparse_seq;
 Result.num_queries = num_queries;
 Result.sol = x;
 Result.converged = converged;
-
-

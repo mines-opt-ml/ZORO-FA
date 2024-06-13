@@ -17,8 +17,9 @@ function Result = ZORO(fparam, param)
 
 %% INITIALIZATION
 Result = struct;
+Result.algname = 'ZORO';
 n = param.n;
-eps = 1e-6; maxit = 100;
+eps = 1e-10; maxit = 100;
 
 x = zeros(n,1); % initial sol (x0)
 verbose = false;
@@ -64,7 +65,7 @@ delta = param.delta;
 step_size = param.step_size;
 
 % ==== Initialize parameters
-num_samples = 2*ceil(sparsity*log(n/sparsity)); % taking b1 = 2 for now.
+num_samples = 2*ceil(sparsity*log2(n/sparsity)); % taking b1 = 2 for now.
 Z =(2*(rand(num_samples,n) > 0.5) - 1)/sqrt(num_samples);  % Generate Rademacher sampling vecs
 cosamp_params.Z = Z;
 cosamp_params.sparsity = sparsity;
@@ -73,11 +74,18 @@ cosamp_params.n = 20; % Hardcode number of iterations of CoSaMP.
 
 for k=1:maxit
     cosamp_params.x = x;
-    [f_k,grad_estimate] = CosampGradEstimate(f,fparam, cosamp_params);
+    disp('This is an iteration of ZORO.')
+    try
+        [f_k,grad_estimate,err] = CosampGradEstimate(f,fparam, cosamp_params);
+    catch ME
+        disp('An error has occurred. Terminating run of ZORO')
+        converged = false;
+        break
+    end
     x = x - step_size*grad_estimate;
     objval_seq(k) = f_k;
-    disp(['Current function value is ', num2str(f_k)])
     num_queries(k+1) = num_queries(k) + num_samples;
+    disp(['Current function value is ', num2str(f_k), ' and total number of queries is ', num2str(num_queries(k+1))])
     if (num_queries(k+1)>param.budget)
         objval_seq(k+1) = f_k;
         disp('Max queries hit!')
@@ -97,7 +105,7 @@ for k=1:maxit
         % eps = EPS_MORE * (f0 - fmin)
         if (f_k < fmin + eps) 
             if verbose
-                disp([algname, ' Converged in ', num2str(k),' steps. Exit the loop']);
+                disp(['ZORO Converged in ', num2str(k),' steps. Exit the loop']);
                 disp(['Function val = ' , num2str(fxnew)]);
             end
             converged = true;
@@ -108,7 +116,7 @@ end
 
 if (k>=maxit)
     if verbose
-        disp([algname, ' did not converge in ', num2str(maxit) , ' steps.']);
+        disp(['ZORO did not converge in ', num2str(maxit) , ' steps.']);
     end
     converged = false;
 end

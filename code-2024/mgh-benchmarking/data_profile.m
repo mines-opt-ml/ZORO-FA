@@ -64,7 +64,7 @@ for p = 1:np
 end
 
 % Other colors, lines, and markers are easily possible:
-colors  = ['b' 'r' 'k' 'm' 'c' 'g' 'y'];   lines   = {'-' '-.' '--'};
+colors  = ['b' 'r' 'm' 'k' 'c' 'g' 'y'];   lines   = {'-' '-.' '--'};
 markers = [ 's' 'o' '^' 'v' 'p' '<' 'x' 'h' '+' 'd' '*' '<' ];
 labels = cell(ns,1);
 for s=1:ns
@@ -82,7 +82,7 @@ for s = 1:ns
     [xs,ys] = stairs(T(:,s),(1:np)/np);
     sl = mod(s-1,3) + 1; sc = mod(s-1,7) + 1; sm = mod(s-1,12) + 1;
     option1 = [char(lines(sl)) colors(sc) markers(sm)];    
-    hl(s) = plot(xs,ys,option1);
+    hl(s) = plot(xs,ys,option1, 'LineWidth', 2);
     hold on;
 end
 

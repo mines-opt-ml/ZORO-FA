@@ -17,6 +17,7 @@ function Result = adaZORO(fparam, param)
 
 %% INITIALIZATION
 Result = struct;
+Result.algname = 'adaZORO';
 n = param.n;
 eps = 1e-6; maxit = 100;
 
@@ -62,10 +63,7 @@ num_queries(1) = 1;  % evaluated f(x) at initialization
 sparsity = param.sparsity;
 delta = param.delta;
 step_size = param.step_size;
-phi = 1e-1; %tolerance parameter. Hardcoding this for now.
-
-% Sundry variables
-total_fevals = 0;
+phi = 2.5e-1; %tolerance parameter. Hardcoding this for now.
 
 for k=1:maxit
     % Try computing gradient using support of previous grad estimate
@@ -81,35 +79,44 @@ for k=1:maxit
     %     lsqr_grad_estimate = Z(support_gk, 1:s)\y;
     % end
     flag = false;
-    num_samples_this_iter = 0;
-    num_old_samples = 0;
-    clear cosamp_params;
     j = 0;
     s_j = sparsity;
+    num_queries_this_iter = 0;
     while flag == false
-        s_j = s_j + 1;
-        num_samples = min(n-1, ceil(2*s_j*log2(n/s_j)));
-        num_new_samples = num_samples - num_old_samples;
-        num_old_samples = num_samples;
-        Z_new = (2*(rand(num_new_samples,n) > 0.5) - 1);
+        num_samples = min(n,2*ceil(s_j*log2(n/s_j))); % taking b1 = 2 for now.
+        Z =(2*(rand(num_samples,n) > 0.5) - 1)/sqrt(num_samples);  % Generate Rademacher sampling vecs
+        cosamp_params.Z = Z;
         cosamp_params.sparsity = s_j;
-        cosamp_params.Z_new = Z_new;
-        cosamp_params.num_samples = num_samples;
         cosamp_params.delta = delta;
+        cosamp_params.n = 20; % Hardcode number of iterations of CoSaMP.
         cosamp_params.x = x;
-        cosamp_params.n = 20; % Hardcode number of iterations of CoSaMP
-        [f_k,grad_estimate,sampling_data] = CosampGradEstimate_query_recycling(f, fparam, cosamp_params);
-        num_samples_this_iter = num_samples_this_iter + num_new_samples;
-        cosamp_params.y = sampling_data.y;
-        cosamp_params.Z = sampling_data.Z;
+        try
+            [f_k,grad_estimate,err] = CosampGradEstimate(f,fparam, cosamp_params);
+        catch ME
+            disp('An error has occurred. Terminating run of adaZORO')
+            objval_seq(k+1) = f_k;
+            % Package and return results
+            num_iter = k;
+            num_queries(k+1) = num_queries(k) +num_queries_this_iter;
+            objval_seq = objval_seq(1:num_iter+1);
+            num_queries = num_queries(1:num_iter+1);
+
+            % package
+            Result.objval_seq = objval_seq;
+            Result.num_queries = num_queries;
+            Result.sol = x;
+            Result.converged = false;
+            return
+        end
+        num_queries_this_iter = num_queries_this_iter + num_samples;
 
         % == Check to see if we have hit feval budget.
-        total_fevals = total_fevals + num_new_samples;
-        if total_fevals>param.budget
+        if num_queries(k) +num_queries_this_iter >param.budget
             objval_seq(k+1) = f_k;
             disp('Max queries hit!')
             % Package and return results
             num_iter = k;
+            num_queries(k+1) = num_queries(k) +num_queries_this_iter;
             objval_seq = objval_seq(1:num_iter+1);
             num_queries = num_queries(1:num_iter+1);
 
@@ -122,15 +129,16 @@ for k=1:maxit
         end
 
         % Check residual to see if gradient estimate is accepted
-        disp(['Sampling data error is ', num2str(sampling_data.err)])
-        if sampling_data.err < phi
+        %disp(['Sampling data error is ', num2str(sampling_data.err)])
+        if err < phi
             x = x - step_size*grad_estimate;
-            objval_seq(k) = f_k;
-            disp(['Current function value is ', num2str(f_k)])
-            num_queries(k+1) = num_queries(k) + num_samples_this_iter;
+            objval_seq(k+1) = f_k;
+            num_queries(k+1) = num_queries(k) + num_queries_this_iter;
+            disp(['Current function value is ', num2str(f_k), ' and num samples is ', num2str(num_queries(k+1))])
             flag = true;
         end
         j = j+1;
+        s_j = s_j + 10;
     end
 end
 
