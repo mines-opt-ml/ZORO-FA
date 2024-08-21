@@ -7,7 +7,7 @@ addpath(genpath('../../Benchmark-algorithms'))
 addpath("problems/")
 
 problems = {'band', 'bl', 'bv', 'ie', 'lin', 'lin0', 'lin1', 'pen1', 'pen2', 'rosex', 'singx', 'trid', 'trig', 'vardim'};
-algorithms = {@DFQRM_B, @ZORO_FA}; % @Nelder_Mead, @ZORO, @ZORO_FA, @adaZORO};%, 'prima'};
+algorithms = {@ZORO_FA}; % @Nelder_Mead, @ZORO, @ZORO_FA, @adaZORO};%, 'prima'};
 Results = cell(length(problems), length(algorithms));
 function_evaluations = cell(length(problems), length(algorithms));
 starting_value = zeros(length(problems),1);

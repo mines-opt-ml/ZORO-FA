@@ -61,6 +61,7 @@ s0 = param.sparsity;
 
 tau = 11; % Constant coming from the compressed sensing theory.
 rho = 0.9; % From compressed sensing theory.
+b = 2; % From compressed sensing theory.
 
 for k=1:maxit
     j = 0;
@@ -68,7 +69,7 @@ for k=1:maxit
     num_queries(k+1) = num_queries(k);
     while flag == false
         % == Step 1.1
-        s_j = min((2^j)*s0, floor(n/2));
+        s_j = min((2^j)*s0, floor(n/2)); %min((2^j)*s0, floor(n/2));
         num_samples = min(n,2*ceil(s_j*log2(n/s_j))); % min(n,ceil(s_j*log2(n/s_j))); % m
         Z =(2*(rand(num_samples,n) > 0.5) - 1)/sqrt(num_samples);  % Generate Rademacher sampling vecs
         cosamp_params.sparsity = s_j;
