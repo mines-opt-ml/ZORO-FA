@@ -65,7 +65,7 @@ b = 2; % From compressed sensing theory.
 
 for k=1:maxit
     % Step 0
-    Z = 2*((rand(n,n) > 0.5) - 1); % generate Rademacher vectors
+    Z = 2*(rand(n,n) > 0.5) - 1); % generate Rademacher vectors
     j = 0;
     flag = false;
     num_queries(k+1) = num_queries(k);
@@ -78,14 +78,14 @@ for k=1:maxit
         % == Step 2.2 and 2.3
         if m_j <= n
             cosamp_params.sparsity = s_j;
-            cosamp_params.Z = Z(1:m_j,:)/sqrt(m_j);
+            cosamp_params.Z = Z(:,1:m_j)/sqrt(m_j);
             delta_j = (theta*epsilon)/(n*tau*sigma_j);
             cosamp_params.delta = max(delta_j,1e-4); % add a floor to prevent delta too small.
             cosamp_iters = ceil(log(theta/4)/log(rho));
             cosamp_params.n = cosamp_iters;
             cosamp_params.x = x;
             [f_k,grad_estimate] = CosampGradEstimate(f, fparam, cosamp_params);
-            num_queries(k+1) = num_queries(k+1) + m_j + 1;
+            num_queries(k+1) = num_queries(k+1) + num_samples;
         % == Step 3
         else
             delta_j = 2*theta*epsilon/(sigma_j*sqrt(n));
