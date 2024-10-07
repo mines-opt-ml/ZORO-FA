@@ -48,13 +48,13 @@ for i = 1:num_samples
     y(i) = (query_point - func_val)/(delta*sqrt(num_samples));
 end
 
-if num_samples < length(x) & sparsity < length(x)/2 - 1
-    [grad_estimate, err] = cosamp(Z,y,sparsity,tol,n);
-else
-    grad_estimate = Z\y;
-    err = 0;
+%if num_samples < length(x) & sparsity < length(x)/2 - 1
+[grad_estimate, err] = cosamp(Z,y,sparsity,tol,n);
+% else
+%     grad_estimate = Z\y;
+%     err = 0;
     %disp(['Dimension is ', num2str(sizes(2)), ' and size of Z is ', num2str(num_samples)])
     %disp('Using least squares gradient estimator instead.')
-end
+%end
 
 end

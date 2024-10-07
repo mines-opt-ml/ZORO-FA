@@ -30,9 +30,9 @@ B = rand(s);
 fparam.A = B'*B;
 fparam.noise_mag = 0; % no noise for now.
 fparam.fmin = 0; % true minimum value.
-%temp_fun = @SparseQuadratic;
+temp_fun = @SparseQuadratic;
 %temp_fun = @Max_s_squared;
-temp_fun = @SparseSkewQuartic;
+%temp_fun = @SparseSkewQuartic;
 fparam.requires_params = false;
 fparam.f = @(x)temp_fun(x, fparam);
 
@@ -65,7 +65,7 @@ labels{5} = 'adaZORO';
 hl = zeros(4,1);
 for j=1:length(algorithms)
     if j == 4
-        param.sparsity = ceil(0.05*n);
+        param.sparsity = ceil(0.01*n);
         param.epsilon = 0.01;
         param.sigma0 = 1;
         param.theta = 0.25;

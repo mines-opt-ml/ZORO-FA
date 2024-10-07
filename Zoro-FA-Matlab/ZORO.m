@@ -74,7 +74,6 @@ cosamp_params.n = 20; % Hardcode number of iterations of CoSaMP.
 
 for k=1:maxit
     cosamp_params.x = x;
-    disp('This is an iteration of ZORO.')
     try
         [f_k,grad_estimate,err] = CosampGradEstimate(f,fparam, cosamp_params);
     catch ME

@@ -83,7 +83,7 @@ for k=1:maxit
     s_j = sparsity;
     num_queries_this_iter = 0;
     while flag == false
-        num_samples = min(n,2*ceil(s_j*log2(n/s_j))); % taking b1 = 2 for now.
+        num_samples = min(n,2*ceil(s_j*log2(n))); % taking b1 = 2 for now. USED TO BE log2(n/s_j) but this is prone to errors.
         Z =(2*(rand(num_samples,n) > 0.5) - 1)/sqrt(num_samples);  % Generate Rademacher sampling vecs
         cosamp_params.Z = Z;
         cosamp_params.sparsity = s_j;
@@ -109,6 +109,7 @@ for k=1:maxit
             return
         end
         num_queries_this_iter = num_queries_this_iter + num_samples;
+        disp(['Num queries thus far', num2str(num_queries(k) +num_queries_this_iter)])
 
         % == Check to see if we have hit feval budget.
         if num_queries(k) +num_queries_this_iter >param.budget
