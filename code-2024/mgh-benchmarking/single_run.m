@@ -2,6 +2,8 @@
 % Add the directories containing ZORO-LS and benchmark algorithms
 %%%%%
 
+clear, clc, close all
+
 addpath(genpath('../../Zoro-FA-Matlab'))
 addpath(genpath('../../Benchmark-algorithms'))
 addpath("problems/")
@@ -17,7 +19,7 @@ N = zeros(2*length(problems),1); % record size of the problems.
 % Parameters determining the run
 maxit=1e5; %so large it will never be reached.
 budget= 100; %100; %NB: the number of fevals allowed is budget*(problem dim + 1)
-n = 500; % use same dimension for all problems
+n = 1000; % use same dimension for all problems
 %s = 0; % use either 0 or 1 to toggle the initial point
 %tolerance = 1e-1;
 
@@ -28,18 +30,19 @@ for k=1:2*length(problems)
         s = 0;
     end
     fname = problems(floor((k+1)/2));
+    %fname = problems(k);
     function_builder; % script that creates param, fparam
     starting_value(k) = fx0;
     % ==== additional parameters for ZORO-FA
-    param.sparsity = ceil(0.05*n); % Let's be consistent with this initial sparsity choice
+    param.sparsity = ceil(0.1*n); % Let's be consistent with this initial sparsity choice
     param.epsilon = 0.01;
     param.sigma0 = 1.;
     param.theta = 0.25;
     N(k) = n;
     % ==== additional parameters for ZORO
-    param.step_size = 0.001;
+    param.step_size = 0.005;
     param.verbose = true;
-    param.delta = 0.005;
+    param.delta = 0.0005;
 
     for j=1:length(algorithms)
         if strcmp(algorithms{j}, 'prima')
@@ -58,10 +61,10 @@ for k=1:2*length(problems)
             temp_Results.algname = 'newuoa';
             temp_Results.objval_seq = output.fhist;
             temp_Results.num_queries = 1:length(output.fhist);
-        elseif j== 1 %j==3 || j == 5  % ZORO or adaZORO
+        elseif j==3 || j == 5  % ZORO or adaZORO
             params.sparsity = ceil(0.1*n);
             temp_Results = feval(algorithms{j}, fparam, param);
-            params.sparsity = ceil(0.05*n); % set sparsity back to default value.
+            %params.sparsity = ceil(0.05*n); % set sparsity back to default value.
         else
             temp_Results = feval(algorithms{j}, fparam, param);
             % min_feval_achieved = min(temp_Results.objval_seq);

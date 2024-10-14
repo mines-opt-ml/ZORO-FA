@@ -65,7 +65,7 @@ delta = param.delta;
 step_size = param.step_size;
 
 % ==== Initialize parameters
-num_samples = 2*ceil(sparsity*log2(n/sparsity)); % taking b1 = 2 for now.
+num_samples = 0.5*ceil(sparsity*log2(ny)); % same number of queries as taking b1 = 4 for now.
 Z =(2*(rand(num_samples,n) > 0.5) - 1)/sqrt(num_samples);  % Generate Rademacher sampling vecs
 cosamp_params.Z = Z;
 cosamp_params.sparsity = sparsity;
@@ -84,7 +84,7 @@ for k=1:maxit
     x = x - step_size*grad_estimate;
     objval_seq(k) = f_k;
     num_queries(k+1) = num_queries(k) + num_samples;
-    disp(['Current function value is ', num2str(f_k), ' and total number of queries is ', num2str(num_queries(k+1))])
+    disp(['ZORO: Current function value is ', num2str(f_k), ' and total number of queries is ', num2str(num_queries(k+1))])
     if (num_queries(k+1)>param.budget)
         objval_seq(k+1) = f_k;
         disp('Max queries hit!')

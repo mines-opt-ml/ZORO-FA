@@ -60,12 +60,12 @@ sigma0 = param.sigma0;
 s0 = param.sparsity;
 
 tau = 11; % Constant coming from the compressed sensing theory.
-rho = 0.9; % From compressed sensing theory.
+rho = 0.5; % From compressed sensing theory.
 b = 1; % From compressed sensing theory.
+% Step 0
+Z = 2*((rand(n,n) > 0.5) - 1); % generate Rademacher vectors
 
 for k=1:maxit
-    % Step 0
-    Z = 2*((rand(n,n) > 0.5) - 1); % generate Rademacher vectors
     % Step 1
     j = 0;
     flag = false;
@@ -74,18 +74,19 @@ for k=1:maxit
         % == Step 2.1
         s_j = (2^j)*s0;
         sigma_j = (2^j)*sigma0;
-        m_j = ceil(4*b*s_j*log2(n)); %ceil(b*s_j*log2(n/s_j)); % number of samples %MODIFIED
+        m_j = ceil(1*s_j*log2(n)); % taking b=2 %ceil(b*s_j*log2(n/s_j)); % number of samples %MODIFIED
+        disp(['mj is ', num2str(m_j)])
 
         % == Step 2.2 and 2.3
-        if  s_j< exp(-lambertw(-log(2)/(4*b))) % m_j <= n
+        if  m_j <= n
             cosamp_params.sparsity = s_j;
             try
                 cosamp_params.Z = Z(1:m_j,:)/sqrt(m_j);
             catch ME
                 disp(['Value of m_j is ', num2str(m_j)])
             end
-            delta_j = (theta*epsilon)/(n*tau*sigma_j);
-            cosamp_params.delta = max(delta_j,1e-4); % add a floor to prevent delta too small.
+            h_j = (theta*epsilon)/(n*tau*sigma_j);
+            cosamp_params.delta = max(h_j,1e-4); % add a floor to prevent delta too small.
             cosamp_iters = ceil(log(theta/4)/log(rho));
             cosamp_params.n = cosamp_iters;
             cosamp_params.x = x;
@@ -93,8 +94,8 @@ for k=1:maxit
             num_queries(k+1) = num_queries(k+1) + m_j + 1;
         % == Step 3
         else
-            delta_j = 2*theta*epsilon/(sigma_j*sqrt(n));
-            fd_params.delta = delta_j;
+            h_j = 2*theta*epsilon/(sigma_j*sqrt(n));
+            fd_params.delta = h_j;
             fd_params.x = x;
             [f_k,grad_estimate] = FDGradEstimate(f, fparam, fd_params); 
             num_queries(k+1) = num_queries(k+1) + n + 1;
