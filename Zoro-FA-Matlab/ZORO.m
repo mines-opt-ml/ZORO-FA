@@ -65,7 +65,7 @@ delta = param.delta;
 step_size = param.step_size;
 
 % ==== Initialize parameters
-num_samples = 0.5*ceil(sparsity*log2(ny)); % same number of queries as taking b1 = 4 for now.
+num_samples = ceil(sparsity*log2(n)); % Changed for consistency with ZORO-FA
 Z =(2*(rand(num_samples,n) > 0.5) - 1)/sqrt(num_samples);  % Generate Rademacher sampling vecs
 cosamp_params.Z = Z;
 cosamp_params.sparsity = sparsity;

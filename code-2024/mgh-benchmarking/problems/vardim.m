@@ -32,15 +32,15 @@ for j=1:n
     var_1=var_1+j*(x(j)-1);
 end;
 if (option==1 | option==3)
-        fvec(n+1)=var_1;
-        fvec(n+2)=(var_1)^2;
+        fvec(n-1)=var_1;
+        fvec(n)=(var_1)^2;
     else fvec='?';
 end;
 
 if (option==2 | option==3)
         for j=1:n
- 	    J(n+1,j) = j;
-            J(n+2,j) = (2*var_1*j);
+ 	    J(n-1,j) = j;
+            J(n,j) = (2*var_1*j);
         end;
     else J='?';
 end;

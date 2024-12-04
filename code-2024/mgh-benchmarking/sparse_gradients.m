@@ -9,9 +9,9 @@ addpath(genpath('../../Zoro-FA-Matlab'))
 addpath(genpath('../../Benchmark-algorithms'))
 addpath("problems/")
 
-fnames = ["rosex", "singx", "ie"]; %["band", "bv", "ie", "lin0", "rosex", "singx", "trid", "trig", "vardim"];  
+fnames = {'band', 'bv', 'ie', 'lin', 'lin0', 'lin1', 'pen1', 'rosex', 'singx', 'trid', 'trig', 'vardim'};  
 num_func = length(fnames);
-num_trials = 20;
+num_trials = 1000;
 maxit=1e5; % not relevant for this experiment, but needed by function_builder
 budget=100; % not relevant for this experiment, but needed by function_builder
 
@@ -23,7 +23,8 @@ for i = 1:num_func
     Sorted_grads = zeros(num_trials, n); 
 
     for j=1:num_trials
-        x = 10*randn(n,1);
+        scale = randsample([0.0001, 0.001, 0.01, 0.1, 1, 10],1);
+        x = scale*randn(n,1);
         [f_vec, J] = f_M(x);
         grad = J'*f_vec; % gradient of nonlinear least squares.
         sorted_grad = flip(sort(abs(grad)));

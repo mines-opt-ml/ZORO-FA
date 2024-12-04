@@ -10,6 +10,7 @@
 %           f=7.08765...10^(-5)  if n=10            
 %                                     
 % 11/21/94 by Madhu Lamba  
+% Modified by Daniel McKenzie 14/10/2024
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 function [fvec,J] = pen1(n,m,x,option)  
@@ -30,15 +31,15 @@ end;
    
 if (option==1 | option==3)
    sum=0;
-   for j=1:n
+   for j=1:n-1
        sum=sum+x(j)'*x(j);
    end;
-   fvec(n+1)=sum-(1/4);
+   fvec(n)=sum-(1/4);
 else fvec='?';
 end;
 
 if (option==2 | option==3)
-   for j=1:n
+   for j=1:n-1
         J(n+1,j) = 2*x(j);
    end;
 else J='?';

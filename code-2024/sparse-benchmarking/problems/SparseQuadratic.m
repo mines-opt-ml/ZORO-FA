@@ -33,6 +33,8 @@ noise_mag = function_params.noise_mag;
 S = function_params.S;
 D = function_params.n;
 A = function_params.A;
+%normA = norm(A,2);
+A = A/length(S);
 
 noise = noise_mag*randn(1)./sqrt(D);
 val = x_in(S)'*A*x_in(S) + noise;
