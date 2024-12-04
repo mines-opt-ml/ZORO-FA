@@ -36,6 +36,11 @@ end
 if isfield(param, 'verbose')
     verbose = param.verbose;
 end
+if isfield(param, 'b')
+    b = param.b;
+else
+    b = 1; % default value
+end
 if isfield(fparam, 'fmin')
     fmin = fparam.fmin;
 end
@@ -65,7 +70,7 @@ delta = param.delta;
 step_size = param.step_size;
 
 % ==== Initialize parameters
-num_samples = ceil(sparsity*log2(n)); % Changed for consistency with ZORO-FA
+num_samples = ceil(b*sparsity*log2(n)); 
 Z =(2*(rand(num_samples,n) > 0.5) - 1)/sqrt(num_samples);  % Generate Rademacher sampling vecs
 cosamp_params.Z = Z;
 cosamp_params.sparsity = sparsity;

@@ -30,6 +30,11 @@ end
 if isfield(fparam, 'fmin')
     fmin = fparam.fmin;
 end
+if isfield(param, 'b')
+    b = param.b;
+else
+    b = 1; % default value
+end
 % Next if statement allows for functions which require further 
 % parameters at evaluation.
 if isfield(fparam, 'requires_params')
@@ -74,7 +79,7 @@ for k=1:maxit
         % == Step 2.1
         s_j = (2^j)*s0;
         sigma_j = (2^j)*sigma0;
-        m_j = ceil(1*s_j*log2(n)); % taking b=2 %ceil(b*s_j*log2(n/s_j)); % number of samples %MODIFIED
+        m_j = ceil(b*s_j*log2(n)); 
         disp(['mj is ', num2str(m_j)])
 
         % == Step 2.2 and 2.3

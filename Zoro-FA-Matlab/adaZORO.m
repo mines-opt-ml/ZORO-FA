@@ -12,7 +12,7 @@ function Result = adaZORO(fparam, param)
 % ============================= Outputs ================================ %
 % output ............... Struct containing all output data, specifically:
 %
-% Geovani Luis Grapiglia and Daniel McKenzie
+% Daniel McKenzie
 % March 2022
 
 %% INITIALIZATION
@@ -35,6 +35,11 @@ if isfield(param, 'maxit')
 end
 if isfield(param, 'verbose')
     verbose = param.verbose;
+end
+if isfield(param, 'b')
+    b = param.b;
+else
+    b = 0.5; % Use different default to ZORO and ZORO-FA as this seems to work better.
 end
 if isfield(fparam, 'fmin')
     fmin = fparam.fmin;
@@ -66,24 +71,12 @@ step_size = param.step_size;
 phi = 2.5e-1; %tolerance parameter. Hardcoding this for now.
 
 for k=1:maxit
-    % Try computing gradient using support of previous grad estimate
-    % if k > 1
-    %     support_gk = find(grad_estimate);
-    %     column_mask = eye(n);
-    %     column_mask = column_mask(:, support_gk);
-    %     y = [];
-    %     for j = 1:sparsity
-    %         new_y_val = (f(x + delta*Z(:,j), fparam) - f(x, fparam))/delta;
-    %         y = [y; new_y_val];
-    %     end
-    %     lsqr_grad_estimate = Z(support_gk, 1:s)\y;
-    % end
     flag = false;
     j = 0;
     s_j = sparsity;
     num_queries_this_iter = 0;
     while flag == false
-        num_samples = min(n,ceil(0.5*s_j*log2(n))); % Adjusted for consistency with ZORO-FA
+        num_samples = min(n,ceil(b*s_j*log2(n)));
         Z =(2*(rand(num_samples,n) > 0.5) - 1)/sqrt(num_samples);  % Generate Rademacher sampling vecs
         cosamp_params.Z = Z;
         cosamp_params.sparsity = s_j;
@@ -130,7 +123,6 @@ for k=1:maxit
         end
 
         % Check residual to see if gradient estimate is accepted
-        %disp(['Sampling data error is ', num2str(sampling_data.err)])
         if err < phi
             x = x - step_size*grad_estimate;
             objval_seq(k+1) = f_k;
