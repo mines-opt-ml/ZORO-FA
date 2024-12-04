@@ -16,7 +16,7 @@ addpath(genpath('../../Zoro-FA-Matlab'))
 addpath(genpath('../../Benchmark-algorithms'))
 addpath(genpath('./problems/'))
 
-algorithms = {@DFQRM_B, @ZORO, @adaZORO, @ZORO_FA}; %, @Nelder_Mead};
+algorithms = {@DFQRM_B, @ZORO, @adaZORO, @ZORO_FA, @Nelder_Mead};
 
 % ==== Parameters determining the run
 n = 1000;
@@ -30,9 +30,9 @@ B = rand(s);
 fparam.A = B'*B;
 fparam.noise_mag = 0; % no noise for now.
 fparam.fmin = 0; % true minimum value.
-temp_fun = @SparseQuadratic;
+%temp_fun = @SparseQuadratic;
 %temp_fun = @Max_s_squared;
-%temp_fun = @SparseSkewQuartic;
+temp_fun = @SparseSkewQuartic;
 fparam.requires_params = false;
 fparam.f = @(x)temp_fun(x, fparam);
 
