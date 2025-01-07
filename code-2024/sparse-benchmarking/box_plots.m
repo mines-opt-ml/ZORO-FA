@@ -1,6 +1,6 @@
 % ===================================================================== %
-% Benchmarking ZORO-FA against a variety of other algorithms.
-% This script generates sample trajectories.
+% Benchmarking ZORO-FA against a variety of other algorithms
+% This script generates box plots
 % Test function: sparse quadratic, sparse quartic, and max-s-squared
 % functions
 % Geovani Luis Grapiglia and Daniel McKenzie.
@@ -18,6 +18,10 @@ addpath(genpath('../../Benchmark-algorithms'))
 addpath(genpath('./problems/'))
 
 algorithms = {@DFQRM_B, @ZORO, @adaZORO, @ZORO_FA, @Nelder_Mead};
+num_algorithms = length(algorithms);
+num_trials = 10;
+final_values = zeros(num_trials, num_algorithms);
+times = zeros(num_trials, num_algorithms);
 
 % ==== Parameters determining the run
 n = 1000;
@@ -27,19 +31,11 @@ S = datasample(1:n,s,'Replace', false); % Sample s random indices in range 1:d
 fparam.s = s;
 fparam.S = S;
 fparam.n = n;
-B = rand(s);
-fparam.A = B'*B;
 fparam.noise_mag = 0; % no noise for now.
 fparam.fmin = 0; % true minimum value.
 %temp_fun = @SparseQuadratic;
-%temp_fun = @Max_s_squared;
-temp_fun = @SparseSkewQuartic;
-fparam.requires_params = false;
-fparam.f = @(x)temp_fun(x, fparam);
-
-% ==== Common params
-x0 = 10*randn(n,1);
-fx0 = fparam.f(x0);
+temp_fun = @Max_s_squared;
+%temp_fun = @SparseSkewQuartic;
 num_iters = 1e6;
 
 % ==== Define the parameters for ZORO
@@ -47,7 +43,6 @@ param.sparsity = s; %feed ZORO the true sparsity.
 param.maxit = num_iters;
 param.delta = 0.001;
 param.step_size = 0.5;
-param.x0 = x0;
 param.budget = (n+1)*budget;
 param.n = n;
 param.verbose = true;
@@ -63,24 +58,41 @@ labels{3} = 'adaZORO';
 labels{4} = 'ZORO-FA';
 labels{5} = 'Nelder-Mead';
 
-hl = zeros(4,1);
-for j=1:length(algorithms)
-    if j == 4
-        param.sparsity = ceil(0.01*n);
-        param.epsilon = 0.01;
-        param.sigma0 = 1;
-        param.theta = 0.25;
+for k = 1:num_trials
+    % random parameters that determine the run.
+    A = rand(s);
+    fparam.B = A'*A;
+    x0 = 10*randn(n,1);
+    param.x0 = x0;
+    fparam.requires_params = false;
+    fparam.f = @(x)temp_fun(x, fparam);
+    fx0 = fparam.f(x0);
+    %%%%
+    for j=1:num_algorithms
+        if j == 4
+            param.sparsity = ceil(0.01*n);
+            param.epsilon = 0.01;
+            param.sigma0 = 1;
+            param.theta = 0.25;
+        end
+        tic
+        temp_Results = feval(algorithms{j}, fparam, param);
+        times(k,j) = toc;
+        param.sparsity = s; %reset sparsity for ZORO and adaZORO.
+        final_values(k,j) = temp_Results.objval_seq(end);
     end
-    temp_Results = feval(algorithms{j}, fparam, param);
-    sl = mod(j-1,3) + 1;
-    option1 = [char(lines(sl)) colors(j)];
-    num_queries = temp_Results.num_queries;
-    function_values = temp_Results.objval_seq;
-    hl(j) = semilogy(num_queries/(n+1), function_values, option1, 'LineWidth', 3);
-    hold on
 end
 
-legend(labels)
-axis([0 505 0 1.1*fx0])
+figure;
+boxplot(final_values);
+set(gca, 'XTickLabel', labels)
 set(gca, 'FontSize', 18)
-set(gca, 'LineWidth', 1)
+set(gca, 'YScale', 'log')
+ylabel('$f(x_K) - f_{\star}$ (log scale)', 'Interpreter', 'latex');
+
+figure;
+boxplot(times);
+set(gca, 'XTickLabel', labels)
+set(gca, 'FontSize', 18)
+set(gca, 'YScale', 'log')
+ylabel('Run time in seconds (log scale)', 'Interpreter', 'latex');

@@ -32,14 +32,13 @@ end
 noise_mag = function_params.noise_mag;
 S = function_params.S;
 D = function_params.n;
-A = function_params.A;
-%normA = norm(A,2);
-A = A/length(S);
+B = function_params.B;
+B = B/length(S);
 
 noise = noise_mag*randn(1)./sqrt(D);
-val = x_in(S)'*A*x_in(S) + noise;
+val = x_in(S)'*B*x_in(S) + noise;
 grad = zeros(D,1);
-grad(S) = 2*A*x_in(S);
+grad(S) = 2*B*x_in(S);
 
 end
 
