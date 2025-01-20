@@ -1,0 +1,207 @@
+function Result = CARS_VR(fparam, param, NQ)
+algname = 'CARS-VR';
+%% INITIALIZATION
+Result = struct;
+n = param.n;
+eps = 1e-6; maxit = 100;
+
+x = zeros(n,1); % initial sol (x0)
+randAlg = 'U'; % uniform
+verbose = false;
+
+%% Variance Reduction (VR) options
+N_vr = 5*n;
+vr_threshold = 10*n;
+%%
+if isfield(param, 'eps')
+    eps = param.eps;
+end
+if isfield(param, 'x0')
+    x = param.x0;
+end
+if isfield(param, 'maxit')
+    maxit = param.maxit;
+end
+if isfield(param, 'randAlg')
+    randAlg = param.randAlg;
+end
+if isfield(param, 'verbose')
+    verbose = param.verbose;
+end
+if isfield(fparam, 'fmin')
+    fmin = fparam.fmin;
+end
+f = fparam.f;
+objval_seq = zeros(maxit+1,1);
+gamma_seq = zeros(maxit+1,1);
+objval_seq(1) = f(x); %initialization
+num_queries = zeros(maxit+1,1);
+num_queries(1) = 1;
+damped_cnt = 0;
+
+VR_fd_method = 2; % 1 for forward, 2 for central difference
+g_vr = zeros(n,1);
+%% ITERATION
+mu_init = 1e-2; % More
+% mu_init = 5e-1; % osc
+mu = mu_init;
+mu_cnt = 0;
+gd_cnt = 0;
+mu_seq = zeros(maxit+1,1);
+mu_seq(1) = mu;
+alpha = 0.5;
+
+CARScounter = zeros(4,1);
+for k=1:maxit
+    num_queries(k+1) = num_queries(k);
+    mu = mu* sqrt(k)/sqrt(k+1);
+    
+    fx = objval_seq(k); % use saved value
+    
+    if mod(k,N_vr) == 1 %&& k > vr_threshold
+        [g_vr, f_queries, x_queries] = gradest(f, x, mu, fx, VR_fd_method);
+        num_queries(k+1) = num_queries(k+1) + VR_fd_method*n;
+    end
+    
+    u = PickRandDir(1, n, 'G')'; u = u/norm(u);
+    fp_vr = f(x+mu*u);
+    fm_vr = f(x-mu*u);
+    num_queries(k+1) = num_queries(k+1) + 2;
+    d_vr = (fp_vr - fm_vr)/(2*mu); % directional derivative
+    h_vr = (fp_vr + fm_vr - 2*fx)/mu^2;
+    % update g estimate
+    g_vr = g_vr + (d_vr-dot(g_vr,u))*u;
+%     if k > vr_threshold
+        v = g_vr; % use this as a search direction
+        v = v/norm(v);
+        fp = f(x+mu*v);
+        fm = f(x-mu*v);
+        num_queries(k+1) = num_queries(k+1) + 2;
+        d = (fp - fm)/(2*mu); % directional derivative
+        h = (fp + fm - 2*fx)/mu^2; % 2nd order dir deriv
+        
+        fmm = f(x-mu*(u+v));
+        num_queries(k+1) = num_queries(k+1) + 1;
+        h12 = (fmm - 1.5*(fm + fm_vr) + 0.5*(fp + fp_vr) + fx)/mu^2;
+        
+        B = [v, u];
+        % Hessian projected on the plane V
+        H_V = [ h, h12; h12, h_vr]; % ~= B'*H*B
+        if any(~isfinite(H_V))
+            disp('err');
+        end
+        
+        delta = -alpha*B*(H_V\[d;d_vr]); % move to the next iterate
+%     else
+%         delta = -alpha*d_vr/h_vr*u;
+%         fp = fp_vr; fm = fm_vr;
+%     end
+    fxnewton = f(x+delta);
+    num_queries(k+1) = num_queries(k+1) + 1; %single query here
+    
+    fs = [fx, fp, fm, fxnewton];
+    [fxnew, midx] = min(fs);
+    CARScounter(midx) = CARScounter(midx)+1;
+    if midx == 1
+        % no update
+        delta = 0;
+    else
+        if midx == 2
+            delta = mu*v;
+        elseif midx == 3
+            delta = -mu*v;
+        elseif midx == 4
+            % delta not changed
+        end
+    end
+    
+    x = x + delta;
+    
+    if isnan(fxnew) % should never happen..
+        disp('errrrrrr');
+    end
+    
+    objval_seq(k+1) = fxnew;
+     
+    if isfield(fparam, 'fmin')
+        % eps = EPS_MORE * (f0 - fmin)
+        if (fxnew < fmin + eps) 
+            if verbose>1
+                disp([algname, ' Converged in ', num2str(k),' steps. Exit the loop']);
+                disp(['Function val = ' , num2str(fxnew)]);
+            end
+            converged = true;
+            break;
+        end
+    end
+    if (num_queries(k+1)>param.MAX_QUERIES)
+        break;
+    end
+    mu_seq(k+1) = mu;
+end
+
+if (k>=maxit) || (num_queries(k+1)>param.MAX_QUERIES)
+    if verbose>1
+        disp([algname, ' did not converge in ', num2str(maxit) , ' steps.']);
+    end
+    converged = false;
+end
+
+num_iter = k;
+objval_seq = objval_seq(1:num_iter+1);
+% sol_seq = sol_seq(1:num_iter+1);
+gamma_seq = gamma_seq(1:num_iter+1);
+num_queries = num_queries(1:num_iter+1);
+mu_seq = mu_seq(1:num_iter+1);
+
+% put into a struct for output
+if isfield(param,'save_x')
+    if param.save_x
+%         Result.sol = sol_seq;
+    end
+end
+Result.objval_seq = objval_seq;
+Result.gamma_seq = gamma_seq;
+Result.num_iter = num_iter;
+Result.num_queries = num_queries;
+Result.converged = converged;
+Result.damped_cnt = damped_cnt;
+Result.mu_cnt = mu_cnt;
+Result.gd_cnt = gd_cnt;
+Result.mu_seq = mu_seq;
+Result.sol = x;
+% Result.k_lambda = k_lambda_condition;
+if verbose>1 && NQ==0
+    disp(CARScounter');
+end
+end
+
+
+function [g, fbest, xbest] = gradest(f, x, r, fx, npts)
+d = length(x); % 1-d vector is allowed for x
+E = eye(d);
+g = zeros(d,1);
+fp = zeros(d,1);
+if npts>1
+    fm = zeros(d,1);
+end
+fbest = Inf;
+for i=1:d
+    fp(i) = f(x + r*E(:,i));
+    if fp(i) < fbest
+        xbest = r*E(:,i);
+        fbest = fp(i);
+    end
+    if npts > 1
+        fm(i) = f(x-r*E(:,i));
+        g(i) = (fp(i)-fm(i))/2/r;
+        if fm(i) < fbest
+            xbest = -r*E(:,i);
+            fbest = fm(i);
+        end        
+    else
+        g(i) = (fp(i)-fx)/r;
+    end
+end
+end
+
