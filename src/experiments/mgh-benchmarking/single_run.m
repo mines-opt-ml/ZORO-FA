@@ -18,10 +18,8 @@ N = zeros(2*length(problems),1); % record size of the problems.
 
 % Parameters determining the run
 maxit=1e5; %so large it will never be reached.
-budget= 100; %100; %NB: the number of fevals allowed is budget*(problem dim + 1)
+budget= 100; %NB: the number of fevals allowed is budget*(problem dim + 1)
 n = 100; % use same dimension for all problems
-%s = 0; % use either 0 or 1 to toggle the initial point
-%tolerance = 1e-1;
 
 for k=1:2*length(problems)
     if mod(k,2) == 0
