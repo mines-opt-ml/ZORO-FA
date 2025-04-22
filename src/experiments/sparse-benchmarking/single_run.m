@@ -17,12 +17,12 @@ addpath(genpath('../../Zoro-FA-Matlab'))
 addpath(genpath('../../Benchmark-algorithms'))
 addpath(genpath('./problems/'))
 
-algorithms = {@DFQRM_B, @ZORO, @adaZORO, @ZORO_FA, @Nelder_Mead};
+algorithms = {@DFQRM_B, @ZORO, @adaZORO, @ZORO_FA, @ZORO_FA_conservative}; % @Nelder_Mead, @ZORO_FA_conservative};
 
 % ==== Parameters determining the run
 n = 1000;
 s = 30; %true sparsity
-budget = 500; %NB: the number of fevals allowed is budget*(problem dim + 1)
+budget = 50; %NB: the number of fevals allowed is budget*(problem dim + 1)
 S = datasample(1:n,s,'Replace', false); % Sample s random indices in range 1:d
 fparam.s = s;
 fparam.S = S;

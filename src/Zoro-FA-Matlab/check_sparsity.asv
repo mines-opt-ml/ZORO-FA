@@ -1,0 +1,20 @@
+function [sparsity_flag, sparsity_parameter] = check_sparsity(vector, epsilon)
+% Function to check approximate sparsity. 
+% Daniel McKenzie and Geovani Nunes Grapiglia
+% April 2025.
+%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Initialize
+
+[sorted_vector] = sort(abs(vector), 'ascend');
+sorted_vector_squared = sorted_vector.^2;
+
+partial_ell1_norms = cumsum(sorted_vector);
+partial_ell2_norms = cumsum(sorted_vector_squared);
+
+for i = 1:n
+    if partial_ell_1_norms(i) <= epsilon && partial_ell2_norms <= epsilon
+        sparsity_flag = true
+        sparsity_parameter = n - i
+    end
+end
