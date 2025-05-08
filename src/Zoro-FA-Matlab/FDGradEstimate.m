@@ -38,7 +38,6 @@ for i=1:n
     else
         query_point = function_handle(x + delta*e_i);
     end
-    disp(['x shape is ', num2str(size(x))])
     grad_estimate(i) = (query_point - func_val)/delta;
 end
 

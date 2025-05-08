@@ -17,12 +17,12 @@ addpath(genpath('../../Zoro-FA-Matlab'))
 addpath(genpath('../../Benchmark-algorithms'))
 addpath(genpath('./problems/'))
 
-algorithms = {@DFQRM_B, @ZORO, @adaZORO, @ZORO_FA, @ZORO_FA_conservative}; % @Nelder_Mead, @ZORO_FA_conservative};
+algorithms = {@DFQRM_B, @ZORO, @adaZORO, @ZORO_FA, @Nelder_Mead, @StochasticSubspaceDescent};
 
 % ==== Parameters determining the run
 n = 1000;
 s = 30; %true sparsity
-budget = 50; %NB: the number of fevals allowed is budget*(problem dim + 1)
+budget = 500; %NB: the number of fevals allowed is budget*(problem dim + 1)
 S = datasample(1:n,s,'Replace', false); % Sample s random indices in range 1:d
 fparam.s = s;
 fparam.S = S;
@@ -51,6 +51,7 @@ param.x0 = x0;
 param.budget = (n+1)*budget;
 param.n = n;
 param.verbose = true;
+param.num_samples = 30; % dimension of the subspace for Stochastic Subspace.
 
 % ==== Plotting options
 % NB: have switched 3rd and 4th options to accomodate ZORO. Remember to
@@ -62,6 +63,7 @@ labels{2} = 'ZORO';
 labels{3} = 'adaZORO';
 labels{4} = 'ZORO-FA';
 labels{5} = 'Nelder-Mead';
+labels{6} = 'SSD'; %stochastinc subspace descent
 
 hl = zeros(4,1);
 for j=1:length(algorithms)
