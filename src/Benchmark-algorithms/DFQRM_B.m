@@ -106,7 +106,7 @@ while (nf<nfmax) && (fmin > 10^(-10))
   fmin = min(u);
   objval_seq = [objval_seq; fmin];
   num_queries = [num_queries; H(end,1)];
-  disp(['best f value so far is ', num2str(fmin), ' step size is ', num2str(1/sigma), ' num queries is ', num2str(H(end,1))])
+  disp(['DFQRM. Obj val is ', num2str(fmin), ' step size is ', num2str(1/sigma), ' num queries is ', num2str(H(end,1))])
 end
 %fmin=min(u);
 %plot(u);

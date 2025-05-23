@@ -21,11 +21,6 @@ end
 if isfield(param, 'x0')
     x = param.x0;
 end
-if isfield(param, 'early_stopping')
-    early_stopping = param.early_stopping;
-else
-    early_stopping = true;
-end
 if isfield(param, 'maxit')
     maxit = param.maxit;
 end
@@ -150,7 +145,7 @@ for k=1:maxit
             return
         end
     end
-    if isfield(fparam, 'fmin') && early_stopping == true
+    if isfield(fparam, 'fmin') & early_stopping = true
         tolerance = target_reduction_frac * (f0 - fmin);
         if (f_plus < fmin + tolerance) 
             if verbose

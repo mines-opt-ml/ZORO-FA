@@ -9,7 +9,7 @@ addpath(genpath('../../Benchmark-algorithms'))
 addpath("problems/")
 
 problems = {'band', 'bl', 'bv', 'ie', 'lin', 'lin0', 'lin1', 'pen1', 'pen2', 'rosex', 'singx', 'trid', 'trig', 'vardim'};
-algorithms =  {@DFQRM_B, @ZORO_FA, @ZORO_FA_conservative}; % {@DFQRM_B, @Nelder_Mead, @ZORO, @ZORO_FA, @adaZORO};%, 'prima'};
+algorithms =  {@DFQRM_B, @Nelder_Mead, @ZORO, @ZORO_FA, @adaZORO, @StochasticSubspaceDescent, @DirectSearchRR};%, 'prima'};
 Results = cell(2*length(problems), length(algorithms));
 function_evaluations = cell(2*length(problems), length(algorithms));
 starting_value = zeros(2*length(problems),1);
@@ -31,7 +31,7 @@ for k=1:2*length(problems)
     %fname = problems(k);
     function_builder; % script that creates param, fparam
     starting_value(k) = fx0;
-    % ==== additional parameters for ZORO-FA
+    % ==== additional parameters for ZORO and ZORO-FA
     param.sparsity = ceil(0.1*n); % Let's be consistent with this initial sparsity choice
     param.epsilon = 0.01;
     param.sigma0 = 1.;
@@ -41,6 +41,8 @@ for k=1:2*length(problems)
     param.step_size = 0.005;
     param.verbose = true;
     param.delta = 0.0005;
+    % ==== additional parameters for SSD
+    param.num_samples = 30;
 
     for j=1:length(algorithms)
         if strcmp(algorithms{j}, 'prima')
@@ -74,6 +76,8 @@ for k=1:2*length(problems)
         end
     end
 end
+
+save('data_profile_data.mat', 'Results');
 
 tolerances = [1e-1, 1e-2, 1e-3];
 for i=1:3

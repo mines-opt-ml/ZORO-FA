@@ -33,8 +33,8 @@ end
 if isfield(fparam, 'fmin')
     fmin = fparam.fmin;
 end
-if isfield(param, 'num_samples_RR')
-    num_samples = param.num_samples_RR;
+if isfield(param, 'num_samples')
+    num_samples = param.num_samples;
 else
     num_samples = 1;
 end
@@ -51,21 +51,15 @@ if isfield(param, 'alpha_max')
     alpha_max = param.alpha_max;
 else
     alpha_max = 1000; % default value used in experiments of Roberts and Royer
-end
 if isfield(param, 'gamma_inc')
     gamma_inc = param.gamma_inc;
 else
-    gamma_inc = 2.0; %value used in experiments of Royer and Roberts was 2
+    gamma_inc = 2; %value used in experiments of Royer and Roberts
 end
 if isfield(param, 'gamma_dec')
     gamma_dec = param.gamma_dec;
 else
     gamma_dec = 0.5; % value used in experiments of Roberts and Royer.
-end
-if isfield(param, 'c')
-    c = param.c;
-else
-    c = 0.001; %could not find default value in R&R's paper.
 end
 
 % Next if statement allows for functions which require further 
@@ -91,8 +85,7 @@ num_queries(1) = 1;
 
 for k=1:maxit
     flag = false;
-    counter = 1;
-    fx = objval_seq(k);
+    fx = objeval_seq(k);
     if isfield(fparam, 'fmin')
         if (fx < fmin + eps) 
             if verbose
@@ -110,13 +103,6 @@ for k=1:maxit
         converged = false;
         break;
     end
-    if alpha < 1e-10
-        disp('Sampling radius is too small. Terminating.')
-        disp(['Function val = ' , num2str(fx)]);
-        converged = false;
-        break;
-    end
-
     num_queries(k+1) = num_queries(k);
     while flag == false
         u = randn(n,1);
@@ -133,8 +119,8 @@ for k=1:maxit
             flag = true;
             num_queries(k+1) = num_queries(k+1) + 1;
             objval_seq(k+1) = f_plus;
-            alpha = min(gamma_inc*alpha, alpha_max);
-            disp(['DS.  Obj val is ', num2str(f_plus), ' num queries is + ', num2str(counter)])
+            alpha = min(gamma_dec*alpha, alpha_max);
+            disp(['Current objective function value is ', num2str(f_plus)])
         end
 
         if flag == false
@@ -150,12 +136,9 @@ for k=1:maxit
                 flag = true;
                 num_queries(k+1) = num_queries(k+1) + 2; %also count the query at x_plus
                 objval_seq(k+1) = f_minus;
-                alpha = min(gamma_inc*alpha, alpha_max);
-                disp(['DS.  Obj val is ' num2str(f_minus), ' num queries is ', num2str(counter)])
+                disp(['Current objective function value is ', num2str(f_minus)])
             end
         end
-        alpha = gamma_dec*alpha; % decrease sampling radius if unsuccessful.
-        counter = counter + 1;
     end
 end
 

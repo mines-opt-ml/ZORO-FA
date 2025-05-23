@@ -39,7 +39,12 @@ end
 if isfield(param, 'b')
     b = param.b;
 else
-    b = 1; % default value
+    b = 1.0; % default value
+end
+if isfield(param, 'early_stopping')
+    early_stopping = param.early_stopping;
+else
+    early_stopping = true;
 end
 if isfield(fparam, 'fmin')
     fmin = fparam.fmin;
@@ -88,9 +93,15 @@ for k=1:maxit
     end
     x = x - step_size*grad_estimate;
     objval_seq(k) = f_k;
-    num_queries(k+1) = num_queries(k) + num_samples;
+    num_queries(k+1) = num_queries(k) + num_samples + 1;
+    disp(['Norm of gradient estimate is ', num2str(norm(grad_estimate,2))])
     disp(['ZORO: Current function value is ', num2str(f_k), ' and total number of queries is ', num2str(num_queries(k+1))])
     if (num_queries(k+1)>param.budget)
+        if requires_params
+            objval_seq(k+1) = f(x, fparam); 
+        else
+            objval_seq(k+1) = f(x); 
+        end
         objval_seq(k+1) = f_k;
         disp('Max queries hit!')
         % Package and return results
@@ -105,12 +116,12 @@ for k=1:maxit
         Result.converged = false;
         return
     end
-    if isfield(fparam, 'fmin')
+    if isfield(fparam, 'fmin') && early_stopping == true
         % eps = EPS_MORE * (f0 - fmin)
         if (f_k < fmin + eps) 
             if verbose
                 disp(['ZORO Converged in ', num2str(k),' steps. Exit the loop']);
-                disp(['Function val = ' , num2str(fxnew)]);
+                disp(['Function val = ' , num2str(f_k)]);
             end
             converged = true;
             break;

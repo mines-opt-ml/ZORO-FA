@@ -9,40 +9,49 @@ algname = 'StochasticSubspaceDescent';
 Result = struct;
 Result.algname = algname;
 n = param.n;
-eps = 1e-6; maxit = 100;
-
-x = zeros(n,1); % initial sol (x0)
-randAlg = 'U'; % uniform
-verbose = false;
-
+eps = 1e-10; 
 
 if isfield(param, 'eps')
     eps = param.eps;
 end
 if isfield(param, 'x0')
     x = param.x0;
+else
+    x = zeros(n,1); % default initial solution.
 end
 if isfield(param, 'maxit')
     maxit = param.maxit;
-end
-if isfield(param, 'randAlg')
-    randAlg = param.randAlg;
+else
+    maxit = 100;
 end
 if isfield(param, 'verbose')
     verbose = param.verbose;
+else
+    verbose = false; %by default turn verbose mode off.
 end
 if isfield(fparam, 'fmin')
     fmin = fparam.fmin;
 end
+if isfield(param, 'early_stopping')
+    early_stopping = param.early_stopping;
+else
+    early_stopping = true;
+end
 if isfield(param, 'num_samples')
     num_samples = param.num_samples;
 else
-    num_samples = 1;
+    num_samples = n;
 end
-if isfield(param, 'step_size')
-    alpha = param.step_size;
+if isfield(param, 'step_size_SSD')
+    alpha = param.step_size_SSD;
+    alpha = (num_samples/n)*alpha; % adjust for subsampling.
 else
     alpha = 0.01;
+end
+if isfield(param, 'delta') %sampling radius
+    mu = param.delta;
+else
+    mu = 10^-5;
 end
 % Next if statement allows for functions which require further 
 % parameters at evaluation.
@@ -63,34 +72,23 @@ else
 end
 num_queries = zeros(maxit+1,1);
 num_queries(1) = 1;
-damped_cnt = 0;
-
-%% ITERATION
-mu_init = 1e-4;
-mu = mu_init;
-mu_cnt = 0;
-gd_cnt = 0;
-
-mu_seq = zeros(maxit+1,1);
-mu_seq(1) = mu;
 
 for k=1:maxit
     num_queries(k+1) = num_queries(k);
-    mu =  1/sqrt(k+1);
     fx = objval_seq(k); % use saved value
     delta = zeros(length(x),1); % the gradient approximation
     % Sample num_samples orthogonal directions. We use the approach
     % suggested by Kozak et al on pg. 348.
     Z = randn(n, num_samples);
-    [Q,R] = qr(Z);
+    [Q,~] = qr(Z);
     for i=1:num_samples
-        u = sqrt(n/num_samples)*Q(:, i); %check scaling factor is right
+        u = sqrt(n/num_samples)*Q(:, i);
         if requires_params
             fp = f(x+mu*u, fparam);
         else
-            fp = f(x+mu*u); %initialization
+            fp = f(x+mu*u); 
         end
-        num_queries(k+1) = num_queries(k+1) + num_samples;
+        num_queries(k+1) = num_queries(k+1) + 1;
         d = (fp - fx)/mu; % directional derivative
         delta = delta + d*u;
     end
@@ -108,13 +106,14 @@ for k=1:maxit
     x = x + delta;
 
     objval_seq(k+1) = fxnew;
-    disp(['Current objective function value is ', num2str(fxnew)])
+    disp(['SSD. Obj val is ', num2str(fxnew), ' and num queries is ', num2str(num_queries(k+1))])
     
-    if isfield(fparam, 'fmin')
+    if isfield(fparam, 'fmin') && early_stopping == true
         if (fxnew < fmin + eps) 
             if verbose
                 disp([algname, ' Converged in ', num2str(k),' steps. Exit the loop']);
                 disp(['Function val = ' , num2str(fxnew)]);
+                num_iter = k;
             end
             converged = true;
             break;
@@ -125,9 +124,9 @@ for k=1:maxit
             disp('Max queries hit!')
         end
         converged = false;
+        num_iter = k;
         break;
     end
-    mu_seq(k+1) = mu;
 end
 
 if (k>=maxit)
@@ -137,26 +136,15 @@ if (k>=maxit)
     converged = false;
 end
 
-num_iter = k;
 objval_seq = objval_seq(1:num_iter+1);
 gamma_seq = gamma_seq(1:num_iter+1);
 num_queries = num_queries(1:num_iter+1);
-mu_seq = mu_seq(1:num_iter+1);
 
 % put into a struct for output
-if isfield(param,'save_x')
-    if param.save_x
-%         Result.sol = sol_seq;
-    end
-end
 Result.objval_seq = objval_seq;
 Result.gamma_seq = gamma_seq;
 Result.num_iter = num_iter;
 Result.num_queries = num_queries;
 Result.converged = converged;
-Result.damped_cnt = damped_cnt;
-Result.mu_cnt = mu_cnt;
-Result.gd_cnt = gd_cnt;
-Result.mu_seq = mu_seq;
 Result.sol = x;
 end

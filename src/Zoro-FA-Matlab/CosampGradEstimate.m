@@ -51,7 +51,7 @@ for i = 1:num_samples
         query_point = function_handle(x + delta*Z(i,:)');
     end
     query_points(i) = query_point;
-    y(i) = (query_point - func_val)/(delta*sqrt(num_samples));
+    y(i) = (query_point - func_val)/(delta);
 end
 
 % find best query point examined

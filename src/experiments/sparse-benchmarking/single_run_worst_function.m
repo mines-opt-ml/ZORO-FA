@@ -1,10 +1,9 @@
 % ===================================================================== %
 % Benchmarking ZORO-FA against a variety of other algorithms.
 % This script generates sample trajectories.
-% Test functions: sparse quadratic, sparse quartic, max-s-squared, worst
-% function in the world.
+% Test function: Sparse version of Nesterov's worst function in the world.
 % Geovani Luis Grapiglia and Daniel McKenzie.
-% March 2022--December 2024
+% March 2022--May 2025
 % ===================================================================== %
 
 clear, close all, clc
@@ -22,31 +21,19 @@ algorithms = {@DFQRM_B, @ZORO, @adaZORO, @ZORO_FA, @Nelder_Mead, @StochasticSubs
 % ==== Parameters determining the run
 n = 1000;
 s = 30; %true sparsity
-budget = 100; %NB: the number of fevals allowed is budget*(problem dim + 1)
-lambda = 8; % for worst function only.
-% following are only relevant for sparse quartic
-% S = datasample(1:n,s,'Replace', false); % Sample s random indices in range 1:d
-% fparam.S = S;
-% B = rand(s);
-% fparam.A = B'*B;
-
+budget = 500; %NB: the number of fevals allowed is budget*(problem dim + 1)
 fparam.s = s;
 fparam.n = n;
 fparam.noise_mag = 0; % no noise for now.
-fparam.lambda = lambda;
-%fparam.fmin = 0; % true minimum value for max-s-squared.
-fparam.fmin = -lambda*s/(8*(s+1));  %for worst function.
-%temp_fun = @SparseQuadratic;
-%temp_fun = @Max_s_squared;
 temp_fun = @Worst_s_function;
-%temp_fun = @SparseSkewQuartic;
 fparam.requires_params = false;
-
-
 fparam.f = @(x)temp_fun(x, fparam);
+lambda = 100;
+fparam.lambda = lambda;
+fparam.fmin = -lambda*s/(8*(s+1)); % true minimum value.
 
 % ==== Common params
-x0 = 10*randn(n,1);
+x0 = 100*randn(n,1);
 fx0 = fparam.f(x0);
 maxit = 1e6;
 
@@ -54,17 +41,16 @@ maxit = 1e6;
 param.sparsity = s; %feed ZORO the true sparsity.
 param.maxit = maxit;
 param.delta = 0.001;
-param.step_size = 1/lambda;
-param.step_size_SSD = 1/(lambda);
+param.step_size = 0.5;
 param.x0 = x0;
 param.budget = (n+1)*budget;
 param.n = n;
 param.verbose = true;
-param.num_samples = s; % dimension of the subspace for Stochastic Subspace.
-%param.b = 1.0; % Compressed sensing parameter for ZORO-type algorithms.
-param.early_stopping = false;
+param.num_samples = 30; % dimension of the subspace for Stochastic Subspace.
 
 % ==== Plotting options
+% NB: have switched 3rd and 4th options to accomodate ZORO. Remember to
+% switch it back.
 colors  = ['b' 'm' 'c' 'k' 'r' 'g' 'y'];   lines   = {'-' '-.' '--'};
 markers = [ 's' 'o' 'v' '^' 'p' '<' 'x' 'h' '+' 'd' '*' '<' ];
 labels{1} = 'DFQRM';
@@ -77,33 +63,25 @@ labels{7} = 'DS-RS'; %Direct Search in Reduced Subspaces
 
 hl = zeros(length(algorithms),1);
 for j=1:length(algorithms)
-    if j == 4
-        param.sparsity = ceil(0.02*n);
+    if j == 4 % ZORO-FA
+        param.sparsity = ceil(0.01*n);
         param.epsilon = 0.01;
-        param.sigma0 = 1.0;
+        param.sigma0 = 1;
         param.theta = 0.25;
     end
+    temp_Results = feval(algorithms{j}, fparam, param);
     if j == 5
-        % Nelder-Mead is time consuming, so we don't want to run it each
-        % time. Next few lines are a cheap way to check what hte objective
-        % function is, and then load the relevant NM results.
-        if fparam.fmin == 0
-            load('max_s_squared_Nelder_Mead.mat');
-        else
-            load('worst_function_Nelder_Mead.mat');
-        end
-    else
-        temp_Results = feval(algorithms{j}, fparam, param);
+        save('worst_function_Nelder_Mead.mat',"temp_Results")
     end
     sl = mod(j-1,3) + 1;
     option1 = [char(lines(sl)) colors(j)];
     num_queries = temp_Results.num_queries;
     function_values = temp_Results.objval_seq;
-    hl(j) = semilogy(num_queries/(n+1), function_values, option1, 'LineWidth', 3);
+    hl(j) = semilogy(num_queries/(n+1), function_values - fparam.fmin, option1, 'LineWidth', 3);
     hold on
 end
 
-legend(labels)
-axis([0 budget + 5 0 1.1*fx0])
+%axis([0 505 0 1.1*fx0])
 set(gca, 'FontSize', 18)
 set(gca, 'LineWidth', 1)
+legend(labels, 'FontSize', 12)

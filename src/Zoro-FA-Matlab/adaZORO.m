@@ -44,6 +44,11 @@ end
 if isfield(fparam, 'fmin')
     fmin = fparam.fmin;
 end
+if isfield(param, 'early_stopping')
+    early_stopping = param.early_stopping;
+else
+    early_stopping = true;
+end
 % Next if statement allows for functions which require further 
 % parameters at evaluation.
 if isfield(fparam, 'requires_params')
@@ -84,7 +89,7 @@ for k=1:maxit
         cosamp_params.n = 20; % Hardcode number of iterations of CoSaMP.
         cosamp_params.x = x;
         try
-            [f_k,grad_estimate,err] = CosampGradEstimate(f,fparam, cosamp_params);
+            [f_k,grad_estimate,~, ~,err] = CosampGradEstimate(f,fparam, cosamp_params);
         catch ME
             disp('An error has occurred. Terminating run of adaZORO')
             objval_seq(k+1) = f_k;
@@ -102,7 +107,7 @@ for k=1:maxit
             return
         end
         num_queries_this_iter = num_queries_this_iter + num_samples;
-        disp(['Num queries thus far', num2str(num_queries(k) +num_queries_this_iter)])
+        disp(['Num queries thus far ', num2str(num_queries(k) +num_queries_this_iter)])
 
         % == Check to see if we have hit feval budget.
         if num_queries(k) +num_queries_this_iter >param.budget
@@ -127,11 +132,22 @@ for k=1:maxit
             x = x - step_size*grad_estimate;
             objval_seq(k+1) = f_k;
             num_queries(k+1) = num_queries(k) + num_queries_this_iter;
-            disp(['Current function value is ', num2str(f_k), ' and num samples is ', num2str(num_queries(k+1))])
+            disp(['adaZORO: Obj val is ', num2str(f_k), ' and num samples is ', num2str(num_queries(k+1))])
             flag = true;
         end
         j = j+1;
         s_j = s_j + 10;
+
+        % if isfield(fparam, 'fmin') && early_stopping == true
+        % % eps = EPS_MORE * (f0 - fmin)
+        % if (f_k < fmin + eps) 
+        %     if verbose
+        %         disp(['adaZORO Converged in ', num2str(k),' steps. Exit the loop']);
+        %         disp(['Function val = ' , num2str(f_k)]);
+        %     end
+        %     converged = true;
+        %     break;
+        % end
     end
 end
 
