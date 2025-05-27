@@ -15,65 +15,21 @@ function Result = adaZORO(fparam, param)
 % Daniel McKenzie
 % March 2022
 
+algname = 'adaZORO';
+
 %% INITIALIZATION
-Result = struct;
-Result.algname = 'adaZORO';
-n = param.n;
-eps = 1e-6; maxit = 100;
-
-x = zeros(n,1); % initial sol (x0)
-verbose = false;
-
-if isfield(param, 'eps')
-    eps = param.eps;
-end
-if isfield(param, 'x0')
-    x = param.x0;
-end
-if isfield(param, 'maxit')
-    maxit = param.maxit;
-end
-if isfield(param, 'verbose')
-    verbose = param.verbose;
-end
-if isfield(param, 'b')
-    b = param.b;
-else
-    b = 0.5; % Use different default to ZORO and ZORO-FA as this seems to work better.
-end
-if isfield(fparam, 'fmin')
-    fmin = fparam.fmin;
-end
-if isfield(param, 'early_stopping')
-    early_stopping = param.early_stopping;
-else
-    early_stopping = true;
-end
-% Next if statement allows for functions which require further 
-% parameters at evaluation.
-if isfield(fparam, 'requires_params')
-    requires_params = fparam.requires_params;
-else
-    requires_params = false;
-end
-f = fparam.f;
-
-% Some arrays to store results
-objval_seq = zeros(maxit+1,1);
-if requires_params
-    objval_seq(1) = f(x, fparam); %initialization
-else
-    objval_seq(1) = f(x); %initialization
-end
-
-num_queries = zeros(maxit+1,1);
-num_queries(1) = 1;  % evaluated f(x) at initialization
+initialization;
 
 % Algorithm specific parameters.
 sparsity = param.sparsity;
 delta = param.delta;
 step_size = param.step_size;
 phi = 2.5e-1; %tolerance parameter. Hardcoding this for now.
+if isfield(param, 'b')
+    b = param.b;
+else
+    b = 0.5; % Use different default to ZORO and ZORO-FA as this seems to work better.
+end
 
 for k=1:maxit
     flag = false;
@@ -82,7 +38,7 @@ for k=1:maxit
     num_queries_this_iter = 0;
     while flag == false
         num_samples = min(n,ceil(b*s_j*log2(n)));
-        Z =(2*(rand(num_samples,n) > 0.5) - 1)/sqrt(num_samples);  % Generate Rademacher sampling vecs
+        Z =(2*(rand(num_samples,n) > 0.5) - 1);  % Generate Rademacher sampling vecs
         cosamp_params.Z = Z;
         cosamp_params.sparsity = s_j;
         cosamp_params.delta = delta;
@@ -151,13 +107,6 @@ for k=1:maxit
     end
 end
 
-if (k>=maxit)
-    if verbose
-        disp([algname, ' did not converge in ', num2str(maxit) , ' steps.']);
-    end
-    converged = false;
-end
-
 % Package and return results
 num_iter = k;
 objval_seq = objval_seq(1:num_iter+1);
@@ -167,6 +116,5 @@ num_queries = num_queries(1:num_iter+1);
 Result.objval_seq = objval_seq;
 Result.num_queries = num_queries;
 Result.sol = x;
-Result.converged = converged;
     
     

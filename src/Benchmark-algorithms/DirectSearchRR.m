@@ -7,32 +7,9 @@ function Result = DirectSearchRR(fparam, param)
 
 algname = 'DirectSearchRR';
 %% INITIALIZATION
-Result = struct;
-Result.algname = algname;
-n = param.n;
-eps = 1e-6; 
+initialization;
 
-if isfield(param, 'eps')
-    eps = param.eps;
-end
-if isfield(param, 'x0')
-    x = param.x0;
-else
-    x = zeros(n,1);
-end
-if isfield(param, 'maxit')
-    maxit = param.maxit;
-else
-    maxit = 100;
-end
-if isfield(param, 'verbose')
-    verbose = param.verbose;
-else
-    verbose = false;
-end
-if isfield(fparam, 'fmin')
-    fmin = fparam.fmin;
-end
+% algorithm specific parameters
 if isfield(param, 'num_samples_RR')
     num_samples = param.num_samples_RR;
 else
@@ -67,27 +44,6 @@ if isfield(param, 'c')
 else
     c = 0.001; %could not find default value in R&R's paper.
 end
-
-% Next if statement allows for functions which require further 
-% parameters at evaluation.
-if isfield(fparam, 'requires_params')
-    requires_params = fparam.requires_params;
-else
-    requires_params = false;
-end
-f = fparam.f;
-
-% Some arrays to store results
-objval_seq = zeros(maxit+1,1);
-if requires_params
-    fx = f(x, fparam);
-    objval_seq(1) = fx; %initialization
-else
-    fx = f(x);
-    objval_seq(1) = fx; %initialization
-end
-num_queries = zeros(maxit+1,1);
-num_queries(1) = 1;
 
 for k=1:maxit
     flag = false;
@@ -159,13 +115,6 @@ for k=1:maxit
     end
 end
 
-if (k>=maxit)
-    if verbose
-        disp([algname, ' did not converge in ', num2str(maxit) , ' steps.']);
-    end
-    converged = false;
-end
-
 num_iter = k;
 objval_seq = objval_seq(1:num_iter);
 num_queries = num_queries(1:num_iter);
@@ -174,7 +123,6 @@ num_queries = num_queries(1:num_iter);
 Result.objval_seq = objval_seq;
 Result.num_iter = num_iter;
 Result.num_queries = num_queries;
-Result.converged = converged;
 Result.sol = x;
 
 end

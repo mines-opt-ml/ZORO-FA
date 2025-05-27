@@ -7,61 +7,10 @@ function Result = ZORO_FA(fparam, param)
 algname = 'ZORO-FA';
 
 %% INITIALIZATION
-Result = struct;
-Result.algname = algname;
-n = param.n;
-target_reduction_frac = 1e-100; maxit = 100;
-
-x = zeros(n,1); % initial sol (x0)
-verbose = false;
-
-if isfield(param, 'target_reduction_frac')
-    target_reduction_frac = param.target_reduction_frac;
-end
-if isfield(param, 'x0')
-    x = param.x0;
-end
-if isfield(param, 'early_stopping')
-    early_stopping = param.early_stopping;
-else
-    early_stopping = true;
-end
-if isfield(param, 'maxit')
-    maxit = param.maxit;
-end
-if isfield(param, 'verbose')
-    verbose = param.verbose;
-end
-if isfield(fparam, 'fmin')
-    fmin = fparam.fmin;
-end
-if isfield(param, 'b')
-    b = param.b;
-else
-    b = 1.0; % default value
-end
-% Next if statement allows for functions which require further 
-% parameters at evaluation.
-if isfield(fparam, 'requires_params')
-    requires_params = fparam.requires_params;
-else
-    requires_params = false;
-end
-f = fparam.f;
-
-% Some arrays to store results
-objval_seq = zeros(maxit+1,1);
-if requires_params
-    objval_seq(1) = f(x, fparam); %initialization
-else
-    objval_seq(1) = f(x); %initialization
-end
-f0 = objval_seq(1);
+initialization;
 
 sparse_seq = zeros(maxit+1,1); % track effective sparsity
 sparse_seq(1) = 1; % just declare = 1 at beginning
-num_queries = zeros(maxit+1,1);
-num_queries(1) = 1;  % evaluated f(x) at initialization
 
 % Algorithm specific parameters.
 epsilon = param.epsilon;
@@ -90,12 +39,12 @@ for k=1:maxit
         if  m_j <= n
             cosamp_params.sparsity = s_j;
             try
-                cosamp_params.Z = Z(1:m_j,:)/sqrt(m_j);
+                cosamp_params.Z = Z(1:m_j,:);
             catch ME
                 disp(['Value of m_j is ', num2str(m_j)])
             end
             h_j = (theta*epsilon)/(n*tau*sigma_j);
-            cosamp_params.delta = max(h_j,1e-4); % add a floor to prevent delta too small.
+            cosamp_params.delta = max(h_j,1e-10); % add a floor to prevent delta too small.
             cosamp_iters = ceil(log(theta/4)/log(rho));
             cosamp_params.n = cosamp_iters;
             cosamp_params.x = x;
@@ -163,17 +112,9 @@ for k=1:maxit
     end
 end
 
-if (k>=maxit) || (num_queries(k+1)>param.maxit)
-    if verbose>1
-        disp([algname, ' did not converge in ', num2str(maxit) , ' steps.']);
-    end
-    converged = false;
-end
-
 % Package and return results
 num_iter = k;
 objval_seq = objval_seq(1:num_iter+1);
-% sol_seq = sol_seq(1:num_iter+1);
 sparse_seq = sparse_seq(1:num_iter+1);
 num_queries = num_queries(1:num_iter+1);
 
@@ -182,4 +123,3 @@ Result.objval_seq = objval_seq;
 Result.sparse_seq = sparse_seq;
 Result.num_queries = num_queries;
 Result.sol = x;
-Result.converged = converged;

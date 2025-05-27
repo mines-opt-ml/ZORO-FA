@@ -46,7 +46,7 @@ if isfield(param, 'x0')
     [n m]=size(x);
 end
 nfmax = param.budget;
-ep = 10^-5; % this shouldn't be the reason algorithm terminates.
+ep = 10^-5; 
 fun = fparam.f;
 [f]=fun(x);
 nf=1;
@@ -60,12 +60,13 @@ k=0;
 fmin = f;
 
 
-while (nf<nfmax) && (fmin > 10^(-10))
+while (nf<nfmax) % && (fmin > 10^(-10))
   k=k+1;
   h=2*ep/(5*sigma*sqrt(n)); 
   [g,H1,nf]=grad_forward(x,fun,f,nf,h);
   H=[H;H1];
   ngrad=norm(g);
+  % below shouldn't be the reason algorithm terminates.
   while ngrad<(4/5)*ep
       sigma=2*sigma;
       h=2*ep/(5*sigma*sqrt(n)); 
@@ -106,7 +107,7 @@ while (nf<nfmax) && (fmin > 10^(-10))
   fmin = min(u);
   objval_seq = [objval_seq; fmin];
   num_queries = [num_queries; nf]; % [num_queries; H(end,1)];
-  disp(['DFQRM. Obj val is ', num2str(fmin), ' step size is ', num2str(1/sigma), ' num queries is ', num2str(H(end,1))])
+  disp(['DFQRM. Obj val is ', num2str(fmin), ' step size is ', num2str(1/sigma), ' num queries is ', num2str(nf)])
 end
 %fmin=min(u);
 %plot(u);
@@ -115,7 +116,7 @@ end
 Result.objval_seq = objval_seq;
 Result.num_queries = num_queries;
 Result.sol = x;
-disp(['Final loss is ', num2str(H(end,2)), ' and the number of queries is ', num2str(H(end,1))])
+disp(['Final loss is ', num2str(H(end,2)), ' and the number of queries is ', num2str(nf)])
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -126,7 +127,7 @@ function [g,H,nf]=grad_forward(x,fun,f,nf0,h)
 % using forward finite differences with stepsize 
 
 H=[];  
-[n m]=size(x);
+n=length(x);
 I=eye(n);
 g=zeros(n,1);
 nf=nf0;
