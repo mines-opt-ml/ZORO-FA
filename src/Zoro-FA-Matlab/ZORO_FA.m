@@ -133,7 +133,7 @@ for k=1:maxit
         if (num_queries(k+1)>param.budget)
             objval_seq(k+1) = f_k;
             sparse_seq(k+1) = s_j;
-            disp(['Max queries hit!'])
+            disp('Max queries hit!')
             % Package and return results
             num_iter = k;
             objval_seq = objval_seq(1:num_iter+1);

@@ -23,7 +23,7 @@ D = function_params.n;
 if isfield('lambda', function_params)
     lambda = function_params.lambda;
 else
-    lambda = 25;
+    lambda = 8;
 end
 if isfield('noise_mag', function_params)
     noise_mag = function_params.noise_mag;
@@ -32,7 +32,7 @@ else
     noise = 0;
 end
 
-val = (lambda/8)*(sum(x_in(1:s).^2) - sum(x_in(1:s-1).*x_in(2:s))) - (lambda/4)*x_in(1) + noise;
+val = (lambda/4)*(sum(x_in(1:s).^2) - sum(x_in(1:s-1).*x_in(2:s))) - (lambda/4)*x_in(1) + noise;
 grad = zeros(D,1); % grad not yet implemented.
 
 end

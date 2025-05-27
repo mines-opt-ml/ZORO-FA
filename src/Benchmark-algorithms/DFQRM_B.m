@@ -105,7 +105,7 @@ while (nf<nfmax) && (fmin > 10^(-10))
   sigma=max([sigma/2 sigma_min]);
   fmin = min(u);
   objval_seq = [objval_seq; fmin];
-  num_queries = [num_queries; H(end,1)];
+  num_queries = [num_queries; nf]; % [num_queries; H(end,1)];
   disp(['DFQRM. Obj val is ', num2str(fmin), ' step size is ', num2str(1/sigma), ' num queries is ', num2str(H(end,1))])
 end
 %fmin=min(u);

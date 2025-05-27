@@ -167,8 +167,8 @@ if (k>=maxit)
 end
 
 num_iter = k;
-objval_seq = objval_seq(1:num_iter+1);
-num_queries = num_queries(1:num_iter+1);
+objval_seq = objval_seq(1:num_iter);
+num_queries = num_queries(1:num_iter);
 
 % put into a struct for output
 Result.objval_seq = objval_seq;

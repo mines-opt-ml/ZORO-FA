@@ -19,7 +19,7 @@ N = zeros(2*length(problems),1); % record size of the problems.
 % Parameters determining the run
 maxit=1e5; %so large it will never be reached.
 budget= 100; %NB: the number of fevals allowed is budget*(problem dim + 1)
-n = 100; % use same dimension for all problems
+n = 1000; % use same dimension for all problems
 
 for k=1:2*length(problems)
     if mod(k,2) == 0
@@ -34,11 +34,11 @@ for k=1:2*length(problems)
     % ==== additional parameters for ZORO and ZORO-FA
     param.sparsity = ceil(0.1*n); % Let's be consistent with this initial sparsity choice
     param.epsilon = 0.01;
-    param.sigma0 = 1.;
+    param.sigma0 = 2.5;
     param.theta = 0.25;
     N(k) = n;
     % ==== additional parameters for ZORO
-    param.step_size = 0.005;
+    param.step_size = 0.001;
     param.verbose = true;
     param.delta = 0.0005;
     % ==== additional parameters for SSD
@@ -62,7 +62,7 @@ for k=1:2*length(problems)
             temp_Results.objval_seq = output.fhist;
             temp_Results.num_queries = 1:length(output.fhist);
         elseif j==3 || j == 5  % ZORO or adaZORO
-            params.sparsity = ceil(0.1*n);
+            params.sparsity = ceil(0.2*n);
             temp_Results = feval(algorithms{j}, fparam, param);
             %params.sparsity = ceil(0.05*n); % set sparsity back to default value.
         else
@@ -77,7 +77,7 @@ for k=1:2*length(problems)
     end
 end
 
-save('data_profile_data.mat', 'Results');
+save('data_profile_data_n=1000.mat', 'Results');
 
 tolerances = [1e-1, 1e-2, 1e-3];
 for i=1:3
